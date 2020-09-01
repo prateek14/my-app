@@ -1,21 +1,28 @@
 import React, { Fragment } from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import App from './App';
 import * as serviceWorker from './serviceWorker';
 import { HashRouter } from 'react-router-dom';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import 'fontsource-roboto';
+import MenuAppBar from './MenuAppBar';
+import { createStore } from 'redux';
+import { Provider } from 'react-redux';
+import { rootReducer } from './reducers';
+
+const store = createStore(rootReducer);
 
 ReactDOM.render(
-    <Fragment>
-        <CssBaseline />
-        <React.StrictMode>
-            <HashRouter>
-                <App message="Hello World" />
-            </HashRouter>
-        </React.StrictMode>
-    </Fragment>,
+    <Provider store={store}>
+        <Fragment>
+            <CssBaseline />
+            <React.StrictMode>
+                <HashRouter>
+                    <MenuAppBar></MenuAppBar>
+                </HashRouter>
+            </React.StrictMode>
+        </Fragment>
+    </Provider>,
     document.getElementById('root'),
 );
 

@@ -13,7 +13,7 @@ import './MenuAppBar.scss';
 import ListItemLink from './common/ListItemLink';
 import { Switch, Route, withRouter, RouteComponentProps } from 'react-router-dom';
 import StatefulComponent from './StatefulComponent';
-import { RfiListComponentWithRouter } from './RfiComponent';
+import { RecipeListComponent } from './recipes/RecipeListComponent';
 import NoMatch from './common/NoMatch';
 
 export interface MenuAppBarProps extends WithTheme, WithStyles, RouteComponentProps {
@@ -94,7 +94,7 @@ class MenuAppBarRaw extends React.Component<PropsWithChildren<MenuAppBarProps>, 
             <div>
                 <List>
                     <ListItemLink key="Home" icon={<InboxIcon />} to="/" primary="Home" />
-                    <ListItemLink key="rfi" icon={<MailIcon />} to="/rfi" primary="RFI" />
+                    <ListItemLink key="rfi" icon={<MailIcon />} to="/recipe" primary="Recipes" />
                 </List>
             </div>
         );
@@ -156,8 +156,8 @@ class MenuAppBarRaw extends React.Component<PropsWithChildren<MenuAppBarProps>, 
                         <Route exact path="/">
                             <StatefulComponent key="home" message="Home" />
                         </Route>
-                        <Route path="/rfi">
-                            {React.cloneElement(<RfiListComponentWithRouter key="rfi-list" />, {
+                        <Route path="/recipe">
+                            {React.cloneElement(<RecipeListComponent key="recipe-list" />, {
                                 setParentTitle: this.setTitle,
                             })}
                         </Route>
