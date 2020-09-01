@@ -5,6 +5,7 @@ import { RecipeItem } from '../reducers';
 import { connect, MapStateToProps, MapDispatchToProps } from 'react-redux';
 import { CombinedState, Dispatch } from 'redux';
 import { RecipeAction, addRecipe } from '../actions';
+import { Button } from '@material-ui/core';
 
 export type RecipeListProps = RecipeListStateProps & RecipeListDispatchProps & RecipeListOwnProps & RouteComponentProps;
 
@@ -46,20 +47,20 @@ class RecipeListComponentRaw extends React.Component<RecipeListProps> {
                         <RecipeSingleComponent />
                     </Route>
                     <Route path={match.path}>
-                        <div>
-                            <form
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    if (!input || !input.value.trim()) {
-                                        return;
-                                    }
-                                    this.props.addRecipe(input.value);
-                                    input.value = '';
-                                }}>
-                                <input ref={(node) => (input = node)} />
-                                <button type="submit">Add Todo</button>
-                            </form>
-                        </div>
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                if (!input || !input.value.trim()) {
+                                    return;
+                                }
+                                this.props.addRecipe(input.value);
+                                input.value = '';
+                            }}>
+                            <input ref={(node) => (input = node)} />
+                            <Button variant="contained" color="primary" disableElevation type="submit">
+                                Add
+                            </Button>
+                        </form>
                         <ul>
                             {this.props.recipes.map((recipe) => (
                                 <RecipeListItem key={recipe.id} {...recipe} />
