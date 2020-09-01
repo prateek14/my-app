@@ -1,17 +1,25 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
+import { HashRouter } from 'react-router-dom';
+import CssBaseline from '@material-ui/core/CssBaseline';
+import 'fontsource-roboto';
 
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
+    <Fragment>
+        <CssBaseline />
+        <React.StrictMode>
+            <HashRouter>
+                <App message="Hello World" />
+            </HashRouter>
+        </React.StrictMode>
+    </Fragment>,
+    document.getElementById('root'),
 );
 
-// If you want your app to work offline and load faster, you can change
+// if you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
+// learn more about service workers: https://bit.ly/CRA-PWA
 serviceWorker.unregister();
