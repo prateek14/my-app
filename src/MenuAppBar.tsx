@@ -1,4 +1,4 @@
-import React, { PropsWithChildren } from 'react';
+import React, { PropsWithChildren, Fragment } from 'react';
 import logo from './logo.svg';
 import { createStyles, Theme } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
@@ -12,16 +12,16 @@ import MailIcon from '@material-ui/icons/Mail';
 import './MenuAppBar.scss';
 import ListItemLink from './common/ListItemLink';
 import { Switch, Route, withRouter, RouteComponentProps } from 'react-router-dom';
-import StatefulComponent from './StatefulComponent';
 import { RecipeListComponent } from './recipes/RecipeListComponent';
 import NoMatch from './common/NoMatch';
+import { BlocBuilder } from '@felangel/react-bloc';
+import { pageTitleBloc } from './blocs/pageTitleBloc';
+import { Home } from './home/Home';
+import { TodoListComponent } from './todos/TodoListComponent';
 
-export interface MenuAppBarProps extends WithTheme, WithStyles, RouteComponentProps {
-    initTitle?: string;
-}
+export interface MenuAppBarProps extends WithTheme, WithStyles, RouteComponentProps {}
 
 export interface MenuAppBarState {
-    title: string;
     mobileOpen: boolean;
 }
 
@@ -65,16 +65,8 @@ class MenuAppBarRaw extends React.Component<PropsWithChildren<MenuAppBarProps>, 
     constructor(props: PropsWithChildren<MenuAppBarProps>) {
         super(props);
         this.state = {
-            title: this.props.initTitle ?? 'Home',
             mobileOpen: false,
         };
-        this.setTitle = this.setTitle.bind(this);
-    }
-
-    setTitle(newTitle: string): void {
-        this.setState({
-            title: newTitle,
-        });
     }
 
     setMobileOpen(newMobileOpen: boolean): void {
@@ -94,6 +86,7 @@ class MenuAppBarRaw extends React.Component<PropsWithChildren<MenuAppBarProps>, 
             <div>
                 <List>
                     <ListItemLink key="Home" icon={<InboxIcon />} to="/" primary="Home" />
+                    <ListItemLink key="todo" icon={<MailIcon />} to="/todos" primary="TODOs" />
                     <ListItemLink key="rfi" icon={<MailIcon />} to="/recipe" primary="Recipes" />
                 </List>
             </div>
@@ -116,7 +109,12 @@ class MenuAppBarRaw extends React.Component<PropsWithChildren<MenuAppBarProps>, 
                         <div className="flex-center">
                             <img src={logo} className="App-logo" />
                             <Typography variant="h6" noWrap>
-                                {this.state.title}
+                                <BlocBuilder
+                                    bloc={pageTitleBloc}
+                                    builder={(state: string) => {
+                                        return <Fragment>{state}</Fragment>;
+                                    }}
+                                />
                             </Typography>
                         </div>
                     </Toolbar>
@@ -154,12 +152,13 @@ class MenuAppBarRaw extends React.Component<PropsWithChildren<MenuAppBarProps>, 
                     <div className={classes.toolbar} />
                     <Switch>
                         <Route exact path="/">
-                            <StatefulComponent key="home" message="Home" />
+                            <Home />
+                        </Route>
+                        <Route path="/todos">
+                            <TodoListComponent key="todos" />
                         </Route>
                         <Route path="/recipe">
-                            {React.cloneElement(<RecipeListComponent key="recipe-list" />, {
-                                setParentTitle: this.setTitle,
-                            })}
+                            <RecipeListComponent key="recipe-list" />
                         </Route>
                         <Route path="*">
                             <NoMatch />

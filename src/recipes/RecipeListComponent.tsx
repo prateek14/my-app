@@ -6,8 +6,9 @@ import { connect, MapStateToProps, MapDispatchToProps } from 'react-redux';
 import { CombinedState, Dispatch } from 'redux';
 import { RecipeAction, addRecipe } from '../actions';
 import { Button } from '@material-ui/core';
+import { pageTitleBloc } from '../blocs/pageTitleBloc';
 
-export type RecipeListProps = RecipeListStateProps & RecipeListDispatchProps & RecipeListOwnProps & RouteComponentProps;
+export type RecipeListProps = RecipeListStateProps & RecipeListDispatchProps & RouteComponentProps;
 
 export interface RecipeListStateProps {
     recipes: RecipeItem[];
@@ -15,10 +16,6 @@ export interface RecipeListStateProps {
 
 export interface RecipeListDispatchProps {
     addRecipe: (text: string) => RecipeAction;
-}
-
-export interface RecipeListOwnProps {
-    setParentTitle?: (text: string) => void;
 }
 
 export interface RecipeListItemsProps {
@@ -33,9 +30,7 @@ const RecipeListItem: React.SFC<RecipeListItemsProps> = (props: RecipeListItemsP
 class RecipeListComponentRaw extends React.Component<RecipeListProps> {
     constructor(p: RecipeListProps) {
         super(p);
-        if (this.props.setParentTitle) {
-            this.props.setParentTitle('Recipe List');
-        }
+        pageTitleBloc.dispatch('Recipe List');
     }
     render(): ReactNode {
         const match = this.props.match;
@@ -75,13 +70,13 @@ class RecipeListComponentRaw extends React.Component<RecipeListProps> {
 
 const mapStateToProps: MapStateToProps<
     RecipeListStateProps,
-    RecipeListOwnProps,
+    Record<string, unknown>,
     CombinedState<{ recipes: RecipeItem[] }>
 > = (state: CombinedState<{ recipes: RecipeItem[] }>) => ({
     recipes: state.recipes,
 });
 
-const mapDispatchToProps: MapDispatchToProps<RecipeListDispatchProps, RecipeListOwnProps> = (
+const mapDispatchToProps: MapDispatchToProps<RecipeListDispatchProps, Record<string, unknown>> = (
     dispatch: Dispatch<RecipeAction>,
 ) => ({
     addRecipe: (text: string): RecipeAction => dispatch(addRecipe(text)),
