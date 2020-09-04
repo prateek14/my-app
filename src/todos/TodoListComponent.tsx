@@ -1,27 +1,55 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useEffect, useContext } from 'react';
 import { pageTitleBloc } from '../blocs/pageTitleBloc';
 import { Card, CardContent, Typography, CircularProgress, CardActions, IconButton, Tooltip } from '@material-ui/core';
 import { Todo } from '../models/todo';
 import { BlocBuilder } from '@felangel/react-bloc';
 import todoBloc, { TodoState, TodoFetchEvent, TodoDoneEvent } from '../blocs/todoBloc';
 import CheckIcon from '@material-ui/icons/CheckCircle';
-import { CustomSnackbarProps, CustomSnackbar } from '../common/Snackbars';
-import { v4 as uuidv4 } from 'uuid';
+import { FixedSizeList, ListChildComponentProps } from 'react-window';
+import { AlertBlocContext } from '../blocs/alertBloc';
 
-export const TodoListComponent: React.SFC<Record<string, unknown>> = (): JSX.Element => {
-    pageTitleBloc.dispatch('TODOs');
-    todoBloc.dispatch(new TodoFetchEvent());
+export const TodoListComponent: React.SFC<{ todos: Todo[] }> = ({ todos }: { todos: Todo[] }): JSX.Element => {
+    function renderRow(props: ListChildComponentProps) {
+        const { index, style } = props;
+
+        return (
+            <div style={style} key={index}>
+                <TodoListItem key={index} todo={todos[index]} />
+            </div>
+        );
+    }
+
+    return (
+        <FixedSizeList height={880} width="100%" itemSize={220} itemCount={todos.length}>
+            {renderRow}
+        </FixedSizeList>
+    );
+};
+
+export const FilteredTodoListComponent: React.SFC<Record<string, unknown>> = (): JSX.Element => {
+    useEffect(() => {
+        pageTitleBloc.dispatch('TODOs');
+        todoBloc.dispatch(new TodoFetchEvent());
+    }, []);
+
+    const alertBloc = useContext(AlertBlocContext);
+
+    if (alertBloc) {
+        useEffect(() => {
+            const sub = todoBloc.state.subscribe((state) => {
+                if (state.alert) {
+                    alertBloc.dispatch(state.alert);
+                }
+            });
+
+            return () => {
+                sub.unsubscribe();
+            };
+        }, []);
+    }
+
     return (
         <Fragment>
-            <BlocBuilder
-                bloc={todoBloc.alertBloc}
-                builder={(state: CustomSnackbarProps | null) => {
-                    if (state) {
-                        return <CustomSnackbar key={uuidv4()} type={state.type} message={state.message} />;
-                    }
-                    return <Fragment></Fragment>;
-                }}
-            />
             <BlocBuilder
                 bloc={todoBloc}
                 builder={(state: TodoState) => {
@@ -32,13 +60,7 @@ export const TodoListComponent: React.SFC<Record<string, unknown>> = (): JSX.Ele
                         return <p>{state.error}</p>;
                     }
                     if (state.todos && state.todos.length) {
-                        return (
-                            <Fragment>
-                                {state.todos.map((todo) => (
-                                    <TodoListItem key={todo.id} todo={todo} />
-                                ))}
-                            </Fragment>
-                        );
+                        return <TodoListComponent todos={state.todos} />;
                     }
                     return <p>No TODOs</p>;
                 }}
@@ -49,7 +71,7 @@ export const TodoListComponent: React.SFC<Record<string, unknown>> = (): JSX.Ele
 
 export const TodoListItem: React.SFC<{ todo: Todo }> = ({ todo }: { todo: Todo }): JSX.Element => {
     return (
-        <Card key={todo.id} style={{ marginBottom: '12px' }}>
+        <Card key={todo.id}>
             <CardContent>
                 <Typography color="textSecondary" gutterBottom>
                     TODO #{todo.id}

@@ -17,7 +17,7 @@ import NoMatch from './common/NoMatch';
 import { BlocBuilder } from '@felangel/react-bloc';
 import { pageTitleBloc } from './blocs/pageTitleBloc';
 import { Home } from './home/Home';
-import { TodoListComponent } from './todos/TodoListComponent';
+import { FilteredTodoListComponent } from './todos/TodoListComponent';
 
 export interface MenuAppBarProps extends WithTheme, WithStyles, RouteComponentProps {}
 
@@ -155,7 +155,7 @@ class MenuAppBarRaw extends React.Component<PropsWithChildren<MenuAppBarProps>, 
                             <Home />
                         </Route>
                         <Route path="/todos">
-                            <TodoListComponent key="todos" />
+                            <FilteredTodoListComponent key="todos" />
                         </Route>
                         <Route path="/recipe">
                             <RecipeListComponent key="recipe-list" />

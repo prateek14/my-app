@@ -20,6 +20,11 @@
     "jsx": "react",
     "sourceMap": true,
     "typeRoots": [],
+    "types": [
+      "@types/jest",
+      "@types/enzyme",
+      "./types/@felangel__react-bloc"
+    ]
   },
   "include": [
     "src"

@@ -1,6 +1,6 @@
-import { Bloc } from '@felangel/bloc';
+import { Bloc, Transition } from '@felangel/bloc';
 import { Todo } from '../models/todo';
-import { AlertBloc } from './alertBloc';
+import { CustomSnackbarProps } from '../common/Snackbars';
 
 export enum TodoEventType {
     fetch = 'FETCH',
@@ -40,18 +40,53 @@ export class TodoDoneEvent extends TodoEventBase {
     }
 }
 
-export interface TodoState {
+export interface ITodoState {
     count?: number;
     todos?: Todo[];
     fetching?: boolean;
     error?: string;
     lastFetched?: Date;
+    alert?: CustomSnackbarProps | null;
+}
+
+export class TodoState implements ITodoState {
+    count?: number;
+    todos?: Todo[];
+    fetching?: boolean;
+    error?: string;
+    lastFetched?: Date;
+    alert?: CustomSnackbarProps | null;
+    constructor(s: ITodoState) {
+        this.count = s.count;
+        this.todos = s.todos;
+        this.fetching = s.fetching;
+        this.error = s.error;
+        this.lastFetched = s.lastFetched;
+        this.alert = s.alert;
+    }
+
+    patch(s?: ITodoState): TodoState {
+        if (s) {
+            return Object.assign(new TodoState(this), s);
+        }
+        return this;
+    }
+
+    patchItem(item?: Todo): TodoState {
+        if (item && this.todos && this.count) {
+            const foundIndex = this.todos?.findIndex((x) => x.id === item.id);
+            if (foundIndex !== undefined && foundIndex >= 0) {
+                const s = new TodoState(this);
+                s.todos?.splice(foundIndex, 1, ...[item]);
+            }
+        }
+        return this;
+    }
 }
 
 class TodoBloc extends Bloc<TodoEvent, TodoState> {
-    alertBloc = new AlertBloc();
     initialState(): TodoState {
-        return { count: 0, fetching: false, todos: [] };
+        return new TodoState({ count: 0, fetching: false, todos: [] });
     }
 
     async *mapEventToState(event: TodoEvent): AsyncIterableIterator<TodoState> {
@@ -68,6 +103,7 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
     async *toggleDone(event: TodoDoneEvent): AsyncIterableIterator<TodoState> {
         const api = 'https://jsonplaceholder.typicode.com/todos/' + event.id;
         try {
+            yield this.currentState.patch({ fetching: true });
             const response = await fetch(api, {
                 method: 'PATCH',
                 body: JSON.stringify({
@@ -80,14 +116,22 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
 
             const item: Todo = await response.json();
 
-            if (event.done) {
-                this.alertBloc.dispatch({ type: 'success', message: 'Item #' + event.id + ' marked as done!' });
-            }
-
-            yield* this.patchItem(item);
+            yield this.currentState.patch({
+                alert: event.done ? { type: 'success', message: 'Item #' + event.id + ' marked as done!' } : null,
+            });
+            yield this.currentState.patch({
+                fetching: false,
+                alert: null,
+            });
+            yield this.currentState.patchItem(item);
         } catch (e) {
+            yield this.currentState.patch({ fetching: false });
             console.log(e);
         }
+    }
+
+    onTransition(transition: Transition<TodoEvent, TodoState>): void {
+        console.log(transition);
     }
 
     async *fetchTodos(event: TodoFetchEvent): AsyncIterableIterator<TodoState> {
@@ -96,7 +140,7 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
             !this.currentState.lastFetched ||
             new Date().valueOf() - this.currentState.lastFetched.valueOf() >= 5 * 60000
         ) {
-            yield { fetching: true };
+            yield this.currentState.patch({ fetching: true });
             let api = 'https://jsonplaceholder.typicode.com/todos?';
             if (event.id) {
                 api = api + 'id=' + event.id;
@@ -104,32 +148,15 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
             try {
                 const response = await fetch(api);
                 const todos: Todo[] = await response.json();
-                yield {
+                yield new TodoState({
                     fetching: false,
                     todos: todos,
                     count: todos.length,
                     lastFetched: new Date(),
-                };
+                });
             } catch (e) {
-                yield { error: e };
+                yield new TodoState({ error: e });
             }
-        }
-    }
-
-    private async *patchState(s: TodoState): AsyncIterableIterator<TodoState> {
-        if (s) {
-            yield Object.assign(JSON.parse(JSON.stringify(this.currentState)), s);
-        }
-    }
-
-    private async *patchItem(item: Todo): AsyncIterableIterator<TodoState> {
-        if (this.currentState.todos && this.currentState.count) {
-            const s: TodoState = JSON.parse(JSON.stringify(this.currentState));
-            const foundIndex = s.todos?.findIndex((x) => x.id === item.id);
-            if (foundIndex !== undefined && foundIndex >= 0) {
-                s.todos?.splice(foundIndex, 1, ...[item]);
-            }
-            yield s;
         }
     }
 }
